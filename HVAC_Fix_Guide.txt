@@ -1,0 +1,184 @@
+# راهنمای کامل رفع مشکل کنترل دما در پروژه‌های HVAC
+
+## تشخیص و رفع مشکل ارتباط با دستگاه‌های HVAC
+
+### ۱. مشکل اصلی:
+دستگاه‌های HVAC معمولاً فقط فرمت خاصی از درخواست‌ها را می‌پذیرند. مشکل زمانی پیش می‌آید که:
+- داشبورد: `?name=TempSetpoint&value=25` می‌فرستد
+- دستگاه: فقط `?CurrRoomTempSetP_Val=25` می‌شناسد
+
+### ۲. فایل‌های کلیدی برای بررسی:
+
+#### ۲.۱. فایل پیکربندی (`dashboard.config.json`):
+```json
+{
+  "deviceUrl": "http://169.254.61.68/getvar.csv",
+  "units": [
+    {
+      "vars": {
+        "TempSetpoint": "CurrRoomTempSetP_Val"  // مپینگ متغیرها
+      },
+      "setpoint": { "min": 10, "max": 30, "step": 0.5 }
+    }
+  ]
+}
+```
+
+#### ۲.۲. فایل منطق ارسال (`varsAdapter.ts`):
+```typescript
+// در تابع write، آرایه patterns را به این صورت تغییر دهید:
+const patterns = [
+  // فرمت جدید: مستقیماً متغیر دستگاه را set می‌کند
+  '?' + encodeURIComponent(name) + '=' + encodeURIComponent(value),
+  
+  // فرمت‌های قدیمی (به عنوان fallback)
+  '?name=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
+  '?name=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value),
+  '?id=' + encodeURIComponent(name) + '&value=' + encodeURIComponent(value),
+  '?var=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value)
+]
+```
+
+### ۳. مراحل پیاده‌سازی برای پروژه جدید:
+
+#### مرحله ۱: بررسی پیکربندی
+- فایل `config.json` یا `dashboard.config.json` را پیدا کنید
+- mapping بین متغیرهای داشبورد و دستگاه را بررسی کنید
+
+#### مرحله ۲: اصلاح منطق ارسال
+- فایل مربوط به ارسال درخواست‌ها (معمولاً `varsAdapter.ts` یا similar) را پیدا کنید
+- فرمت مستقیم را به اولویت اول آرایه patterns اضافه کنید
+
+#### مرحله ۳: تست ارتباط
+
+##### دستورات تست در PowerShell:
+```powershell
+# تست ارتباط پایه با دستگاه
+ping 169.254.61.68
+
+# تست درخواست مستقیم به دستگاه (اگر curl نصب است)
+curl "http://169.254.61.68/getvar.csv?CurrRoomTempSetP_Val=25"
+
+# جایگزین curl در PowerShell:
+Invoke-WebRequest -Uri "http://169.254.61.68/getvar.csv?CurrRoomTempSetP_Val=25"
+
+# تست از طریق پروکسی (اگر پروژه از پروکسی استفاده می‌کند)
+Invoke-WebRequest -Uri "http://localhost:3000/api/proxy?url=http://169.254.61.68/getvar.csv?CurrRoomTempSetP_Val=25"
+```
+
+##### دستورات تست در Command Prompt:
+```cmd
+ping 169.254.61.68
+
+# اگر curl نصب است:
+curl "http://169.254.61.68/getvar.csv?CurrRoomTempSetP_Val=25"
+
+# یا از PowerShell استفاده کنید
+```
+
+### ۴. عیب‌یابی رایج:
+
+#### ۴.۱. خطای ۵۰۲/۵۰۳ در پروکسی:
+```powershell
+# تنظیم متغیر محیطی برای whitelist کردن hostها
+$env:ALLOWED_PROXY_HOSTS="169.254.61.68,localhost"
+
+# سپس سرور را اجرا کنید
+npm run dev
+```
+
+#### ۴.۲. مشکلات ساخت:
+```powershell
+# ابتدا build کنید
+npm run build
+
+# سپس اجرا کنید  
+npm start
+```
+
+#### ۴.۳. بررسی اینکه سرور در پورت صحیح اجرا شده:
+```powershell
+# بررسی processes در پورت 3000
+netstat -ano | findstr :3000
+
+# یا kill process اگر نیاز است
+taskkill /pid [PID] /f
+```
+
+### ۵. ساختار پیشنهادی برای پروژه‌های جدید:
+
+#### ۵.۱. فایل پیکربندی:
+```json
+{
+  "deviceUrl": "http://[DEVICE_IP]/getvar.csv",
+  "pollingInterval": 5000,
+  "units": [
+    {
+      "id": "unit1",
+      "vars": {
+        "TempSetpoint": "CurrRoomTempSetP_Val",
+        "CurrentTemp": "CurrRoomTemp_Val",
+        "Mode": "OperationMode_Val"
+      },
+      "setpoint": { "min": 10, "max": 30, "step": 0.5 }
+    }
+  ],
+  "allowedHosts": ["169.254.61.68", "localhost"]
+}
+```
+
+#### ۵.۲. نمونه کد ارسال درخواست:
+```typescript
+async function sendToDevice(variableName: string, value: any) {
+  const patterns = [
+    `?${encodeURIComponent(variableName)}=${encodeURIComponent(value)}`,
+    `?name=${encodeURIComponent(variableName)}&value=${encodeURIComponent(value)}`,
+    `?var=${encodeURIComponent(variableName)}&val=${encodeURIComponent(value)}`
+  ];
+  
+  for (const pattern of patterns) {
+    try {
+      const response = await fetch(`${config.deviceUrl}${pattern}`);
+      if (response.ok) return true;
+    } catch (error) {
+      console.warn(`Pattern ${pattern} failed, trying next...`);
+    }
+  }
+  return false;
+}
+```
+
+### ۶. نکات مهم:
+
+۱. **همیشه ابتدا ارتباط پایه را تست کنید** (ping)
+۲. **فرمت مستقیم را اولویت اول قرار دهید**
+۳. **متغیرهای محیطی را برای پروکسی تنظیم کنید**
+۴. **از error handling مناسب استفاده کنید**
+۵. **لاگ‌های console را مانیتور کنید**
+
+### ۷. دستورات مفید برای مدیریت پروژه:
+
+```powershell
+# نصب dependencies
+npm install
+
+# اجرای development mode
+npm run dev
+
+# ساخت production build  
+npm run build
+
+# اجرای production
+npm start
+
+# تست
+npm test
+```
+
+---
+
+## ایجاد شده در: 2025-11-22
+## برای پروژه‌های: Next.js Dashboard با دستگاه‌های HVAC
+## نویسنده: Assistant
+
+این راهنما برای تمام پروژه‌هایی که با دستگاه‌های صنعتی ارتباط دارند قابل استفاده است.

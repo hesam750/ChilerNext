@@ -1,0 +1,13 @@
+{
+  "name": "Chiller Dashboard",
+  "short_name": "Chiller",
+  "description": "CAREL Chiller Control Dashboard - Monitor and control your chiller system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007bff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "fa",
+  "icons": []
+}
