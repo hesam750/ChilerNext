@@ -42,14 +42,9 @@ export default function Page() {
       const a = VarsAdapter(devUrl)
       setAdapter(a)
       const arr = (cfg && cfg.units) || []
-      const maxSlots = 10
-      const filled = arr.slice()
-      while (filled.length < maxSlots) filled.push({ name: 'رول کاعد', vars: {}, disabled: true })
-      setUnits(filled)
+      setUnits(arr)
     }).catch(function () {
       const arr: UnitCfg[] = [{ name: 'رول کاعد', vars: {} }]
-      const maxSlots = 10
-      while (arr.length < maxSlots) arr.push({ name: 'رول کاعد', vars: {}, disabled: true })
       setUnits(arr as any)
     })
   }, [])
