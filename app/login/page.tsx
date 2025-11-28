@@ -14,7 +14,7 @@ export default function LoginPage() {
   :root{
     --bg-primary: linear-gradient(180deg, #0a0f1a 0%, #0d1220 100%);
     --fg-primary: #e5e7eb;
-    --muted: #94a3b8;
+    --muted: #ffffffff;
     --accent-primary: #3b82f6;
     --accent-primary-dark: #2563eb;
     --danger: #ef4444;
@@ -153,7 +153,7 @@ export default function LoginPage() {
       </div>
 
       <a className="brand-logo" href="https://fanap.ir" target="_blank" rel="noopener" aria-label="Fanap Tech">
-        <Image src="/fanap.png" alt="Fanap Tech" width={28} height={28} />
+        <Image src="/fanap.png" alt="Fanap Tech" width={28} height={28} sizes="30px" />
         <span className="txt">Fanap Tech</span>
       </a>
     </div>

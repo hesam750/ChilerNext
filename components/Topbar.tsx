@@ -14,7 +14,7 @@ export default function Topbar({
     <div className="topbar">
       <div className="brand">
         {logoOk ? (
-          <Image src="/fanap.png" width={28} height={28} alt="Fanap" onError={() => { setLogoOk(false) }} className="logo" />
+          <Image src="/fanap.png" width={32} height={32} sizes="(max-width:768px) 24px, 32px" priority alt="Fanap" onError={() => { setLogoOk(false) }} className="logo" />
         ) : (
           <div className="logo-fallback" />
         )}

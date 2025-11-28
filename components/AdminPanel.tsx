@@ -10,6 +10,10 @@ export default function AdminPanel() {
   const [newIp, setNewIp] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [editOpen, setEditOpen] = useState(false)
+  const [editIndex, setEditIndex] = useState<number | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editIp, setEditIp] = useState('')
 
   async function fetchConfig() {
     setError('')
@@ -51,16 +55,35 @@ export default function AdminPanel() {
     } catch { setError('خطای شبکه') } finally { setLoading(false) }
   }
 
-  async function updateUnit(idx: number) {
-    const name = window.prompt('نام جدید کارت', units[idx].name || '') || ''
-    if (!name.trim()) return
+  function openEdit(idx: number) {
+    setEditIndex(idx)
+    setEditName((units[idx] && units[idx].name) || '')
+    setEditIp(deviceIp || '')
+    setEditOpen(true)
+  }
+
+  function closeEdit(){
+    setEditOpen(false)
+    setEditIndex(null)
+    setEditName('')
+    setEditIp('')
+  }
+
+  async function saveEdit(){
+    if (editIndex === null) return
+    const name = editName.trim()
+    const ip = editIp.trim()
+    if (!name) return
     setLoading(true)
     setError('')
     try {
-      const r = await fetch('/api/admin/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update', index: idx, name }) })
+      const payload: any = { action: 'update', index: editIndex, name }
+      if (ip) payload.ip = ip
+      const r = await fetch('/api/admin/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const resp = await r.json()
       if (!r.ok || !resp.ok) { setError(resp.error || 'خطا در ویرایش کارت'); return }
       await fetchConfig()
+      closeEdit()
     } catch { setError('خطای شبکه') } finally { setLoading(false) }
   }
 
@@ -116,11 +139,30 @@ export default function AdminPanel() {
             return (
               <React.Fragment key={idx}>
                 <div style={{ padding: 6 }}><strong>{u.name}</strong></div>
-                <button className="btn" onClick={() => updateUnit(idx)}>ویرایش</button>
+                <button className="btn" onClick={() => openEdit(idx)}>ویرایش</button>
                 <button className="btn" onClick={() => deleteUnit(idx)}>حذف</button>
               </React.Fragment>
             )
           })}
+        </div>
+      </div>
+      <div style={{ display: editOpen ? 'block' : 'none' }}>
+        <div style={{ position:'fixed', inset:0 as any, background:'rgba(0,0,0,.35)', backdropFilter:'blur(2px)', zIndex:1000 }} onClick={closeEdit} />
+        <div style={{ position:'fixed', left:'50%', top:'50%', transform:'translate(-50%,-50%)', width:'min(480px, 92vw)', background:'#fff', borderRadius:12, boxShadow:'0 12px 32px rgba(0,0,0,.25)', zIndex:1001, padding:16 }}>
+          <h4 style={{ marginTop:0, marginBottom:12 }}>ویرایش کارت</h4>
+          <div className="control" style={{ marginBottom:10 }}>
+            <label>نام کارت</label>
+            <input type="text" className="form-control" value={editName} onChange={e => setEditName((e.target as HTMLInputElement).value)} />
+          </div>
+          <div className="control" style={{ marginBottom:10 }}>
+            <label>IP دستگاه (اختیاری)</label>
+            <input type="text" className="form-control" placeholder="مثال: 169.254.61.68" value={editIp} onChange={e => setEditIp((e.target as HTMLInputElement).value)} />
+            <small className="text-muted">اگر IP را تغییر دهید، IP دستگاه اصلی به‌روز می‌شود.</small>
+          </div>
+          <div style={{ display:'flex', gap:8, justifyContent:'flex-end', marginTop:12 }}>
+            <button className="btn" onClick={closeEdit}>انصراف</button>
+            <button className="btn btn-primary" onClick={saveEdit} disabled={loading}>ذخیره</button>
+          </div>
         </div>
       </div>
     </div>

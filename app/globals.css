@@ -1,9 +1,9 @@
 .alert-holder{min-height:28px;padding:0 16px}
 :root{--fanSize:clamp(120px,12vw,180px);--gap:12px;--bg:#fefefe;--text:#101828;--topbar-bg:#ffffff;--topbar-border:#e7eaf0;--topbar-text:#101828;--card-bg:#ffffff;--card-border:#e7ebf3;--panel-bg:#f9fafb;--panel-border:#e7eaf0;--heading:#0f172a;--muted:#6b7280;--accent:#ff8c1a;--accent-contrast:#ffffff}
-html,body{padding:0;margin:0;background:var(--bg);color:var(--text);font-family:'Vazirmatn','IRANSansX',Tahoma,Arial,sans-serif}
+ html,body{padding:0;margin:0;background:var(--bg);color:var(--text);font-family:var(--font-byekan),Tahoma,Arial,sans-serif}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:var(--topbar-bg);border-bottom:1px solid var(--topbar-border);color:var(--topbar-text);position:sticky;top:0;z-index:100}
 .brand{display:flex;align-items:center;gap:12px}
-.logo{height:28px;width:28px;border-radius:6px}
+ .logo{height:32px;width:32px;border-radius:6px}
 .logo-fallback{height:28px;width:28px;border-radius:6px;background:var(--accent)}
 .brand-text{display:flex;flex-direction:column;gap:1px}
 .title{color:var(--heading);font-weight:600;font-size:18px;line-height:1.2}
@@ -25,6 +25,22 @@ html,body{padding:0;margin:0;background:var(--bg);color:var(--text);font-family:
 .theme-icon{font-size:16px}
 .nav-btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--panel-border);background:var(--panel-bg);color:var(--text);cursor:pointer;transition:all .15s ease;text-decoration:none;font-weight:600}
 .nav-btn:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+ @media (max-width:768px){
+ .topbar{padding:12px 12px}
+ .brand{gap:8px}
+ .logo{height:24px;width:24px}
+ .brand .subtitle{display:none}
+ .title{font-size:16px;font-weight:700}
+ .actions{gap:10px}
+ .status{padding:4px 8px}
+ .status-text{display:none}
+ .virtual-display-btn,.theme-btn,.nav-btn{width:32px;min-width:32px;height:32px;padding:0 10px;font-size:12px}
+}
+@media (max-width:480px){
+ .topbar{flex-wrap:wrap;gap:8px}
+ .brand{flex:1}
+ .actions{width:100%;justify-content:flex-end;gap:8px}
+}
 .theme-toggle .icon{font-size:14px;line-height:1}
 .theme-toggle .sun{margin-inline-start:8px}
 .theme-toggle .moon{margin-inline-start:auto;margin-inline-end:8px}
